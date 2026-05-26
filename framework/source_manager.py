@@ -1,8 +1,8 @@
-from typing import Optional
 import importlib
 import pkgutil
 import time
 import logging
+from typing import Optional
 from framework.models import EventPayload
 from framework.sources.base import get_registered_sources, EventSource
 
@@ -15,16 +15,23 @@ class SourceManager:
         self._sources_package = sources_package
 
     def discover(self) -> dict[str, EventSource]:
-        """Importa el paquete de fuentes para que los decoradores se ejecuten."""
         if self._sources_package:
             try:
                 pkg = importlib.import_module(self._sources_package)
-                for _, name, _ in pkgutil.iter_modules(pkg.__path__):
-                    importlib.import_module(f"{self._sources_package}.{name}")
+                if hasattr(pkg, "__path__"):
+                    for _, name, ispkg in pkgutil.iter_modules(pkg.__path__):
+                        full_name = f"{self._sources_package}.{name}"
+                        try:
+                            importlib.import_module(full_name)
+                            logger.debug(f"Importado: {full_name}")
+                        except Exception as e:
+                            logger.warning(f"Error importando {full_name}: {e}")
             except ModuleNotFoundError as e:
                 logger.warning(f"No se pudo importar el paquete de fuentes: {e}")
 
         registered = get_registered_sources()
+        logger.debug(f"Fuentes registradas: {list(registered.keys())}")
+
         instances = {}
         for source_id, cls in registered.items():
             if cls.enabled:
@@ -32,7 +39,6 @@ class SourceManager:
         return instances
 
     def run_source(self, source: EventSource, retries: int = 3, delay: float = 2.0) -> list[EventPayload]:
-        """Ejecuta fetch + parse con retry/backoff básico."""
         for attempt in range(1, retries + 1):
             try:
                 raw = source.fetch()
