@@ -32,6 +32,10 @@ class StorageAdapter(ABC):
         ...
 
     @abstractmethod
+    def save_fingerprint(self, fingerprint: str) -> None:
+        ...
+
+    @abstractmethod
     def capabilities(self) -> set[str]:
         """Informa de las capacidades del adaptador."""
         ...
