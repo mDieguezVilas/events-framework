@@ -1,0 +1,19 @@
+storage:
+  type: csv
+  data_dir: data
+
+sources:
+  example:
+    enabled: true
+    schedule: "0 9 * * *"
+  csv_manual:
+    enabled: true
+    schedule: "0 10 * * *"
+
+notifications:
+  telegram:
+    enabled: true
+    token_env: TELEGRAM_TOKEN
+    chat_id_env: TELEGRAM_CHAT_ID
+
+sources_package: framework.sources

@@ -11,13 +11,18 @@ from framework.publication.telegram import TelegramAdapter
 from framework.orchestrator import Orchestrator
 
 load_dotenv()
-logging.basicConfig(level=logging.DEBUG, format="%(levelname)s - %(message)s")
+logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(message)s")
 
 app = typer.Typer()
 
 
 def _build_orchestrator(sources_package: Optional[str] = None) -> Orchestrator:
     config = load_config()
+
+    import os
+    print("TOKEN:", os.getenv("TELEGRAM_TOKEN"))
+    print("CHAT_ID:", os.getenv("TELEGRAM_CHAT_ID"))
+    print("TG CONFIG:", get_telegram_config(config))
 
     pkg = sources_package or get_sources_package(config)
 

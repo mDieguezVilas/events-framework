@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import Any, Optional
 from framework.models import EventPayload
 from framework.storage.base import StorageAdapter
 from framework.registry import Registry
@@ -17,8 +17,8 @@ class Orchestrator:
         storage: StorageAdapter,
         registry: Registry,
         source_manager: SourceManager,
-        publication_manager: PublicationManager = None,
-        sources_package: str = None,
+        publication_manager: Optional[PublicationManager] = None,
+        sources_package: Optional[str] = None,
     ):
         self._storage = storage
         self._registry = registry
