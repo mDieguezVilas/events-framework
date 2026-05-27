@@ -1,5 +1,5 @@
 storage:
-  type: csv
+  type: sql
   data_dir: data
 
 sources:

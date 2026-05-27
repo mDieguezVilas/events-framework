@@ -74,7 +74,9 @@ class CSVStorage(StorageAdapter):
         for e in events:
             match = True
             for key, val in filter_spec.items():
-                if key == "source" and e.source != val:
+                if key == "id" and e.id != val:
+                    match = False
+                elif key == "source" and e.source != val:
                     match = False
                 elif key == "type_" and e.type_ != val:
                     match = False

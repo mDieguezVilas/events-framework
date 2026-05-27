@@ -1,5 +1,6 @@
 import os
 import yaml
+from typing import Any, Optional
 from typing import Any
 from pathlib import Path
 
@@ -35,3 +36,7 @@ def get_telegram_config(config: dict[str, Any]) -> dict[str, Any] | None:
     if not token or not chat_id:
         return None
     return {"token": token, "chat_id": chat_id}
+
+
+def get_database_url(config: dict[str, Any]) -> Optional[str]:
+    return os.getenv("DATABASE_URL")

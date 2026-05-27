@@ -60,3 +60,16 @@ def test_list_sources(orchestrator):
     make_source("fga", [])
     sources = orchestrator.list_sources()
     assert "fga" in sources
+    
+
+def test_update_no_deduplica_cross_source(orchestrator):
+    """Eventos con el mismo nombre de fuentes distintas NO se deduplicán entre sí."""
+    payload_fga = EventPayload(type_="race", name="10K Santiago", url="u", source="fga")
+    payload_kro = EventPayload(type_="race", name="10K Santiago", url="u", source="kronotime")
+
+    make_source("fga", [payload_fga])
+    make_source("kronotime", [payload_kro])
+
+    result = orchestrator.update()
+    assert result["saved"] == 2
+    assert result["skipped"] == 0
