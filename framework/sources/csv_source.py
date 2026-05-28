@@ -31,6 +31,9 @@ class CSVSource(EventSource):
         payloads = []
         for row in raw:
             try:
+                if not row.get("name") or not row.get("url"):
+                    logger.warning(f"csv_manual: fila ignorada — name o url vacíos")
+                    continue
                 event_date = None
                 if row.get("event_date"):
                     event_date = date.fromisoformat(row["event_date"])
