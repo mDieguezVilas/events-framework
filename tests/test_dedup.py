@@ -16,7 +16,7 @@ def test_normalize_espacios():
 
 def test_normalize_vacio():
     assert normalize("") == ""
-    assert normalize(None) == ""
+    assert normalize(None) == "" # type: ignore
 
 
 def test_fingerprint_mismo_evento():
