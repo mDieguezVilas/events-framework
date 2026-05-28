@@ -44,3 +44,11 @@ class StorageAdapter(ABC):
     def close(self) -> None:
         """Cierra conexiones o ficheros abiertos."""
         ...
+
+    @abstractmethod
+    def get_promoted_fields(self) -> list[str]:
+        ...
+
+    @abstractmethod
+    def promote_field(self, type_id: str, field: str) -> None:
+        ...

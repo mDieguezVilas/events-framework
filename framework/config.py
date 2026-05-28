@@ -40,3 +40,30 @@ def get_telegram_config(config: dict[str, Any]) -> dict[str, Any] | None:
 
 def get_database_url(config: dict[str, Any]) -> Optional[str]:
     return os.getenv("DATABASE_URL")
+
+
+def get_smtp_config(config: dict[str, Any]) -> Optional[dict[str, Any]]:
+    notif = config.get("notifications", {})
+    smtp = notif.get("smtp", {})
+    if not smtp.get("enabled", False):
+        return None
+
+    host = os.getenv("SMTP_HOST")
+    port = os.getenv("SMTP_PORT", "587")
+    user = os.getenv("SMTP_USER")
+    password = os.getenv("SMTP_PASS")
+    from_addr = os.getenv("SMTP_FROM")
+    to_addr = os.getenv("SMTP_TO")
+
+    if not all([host, user, password, from_addr, to_addr]):
+        return None
+
+    return {
+        "host": host,
+        "port": int(port),
+        "user": user,
+        "password": password,
+        "from_addr": from_addr,
+        "to_addr": to_addr,
+        "summary": smtp.get("summary", False),
+    }

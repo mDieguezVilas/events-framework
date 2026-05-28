@@ -121,3 +121,76 @@ class SQLStorage(StorageAdapter):
             data=row.data or {},
         )
 
+    def get_promoted_fields(self) -> list[str]:
+        """Devuelve las columnas promovidas (las que no son columnas fijas del modelo base)."""
+        fixed = {"id", "type_", "name", "url", "source", "event_date", "data"}
+        with Session(self._engine) as session:
+            result = session.execute(
+                text("""
+                    SELECT column_name 
+                    FROM information_schema.columns 
+                    WHERE table_name = 'events'
+                """)
+            ).fetchall()
+        all_columns = {row[0] for row in result}
+        return list(all_columns - fixed)
+
+
+    def promote_field(self, type_id: str, field: str) -> None:
+        """
+        Promueve un campo del JSONB data a columna física con índice.
+        1. ALTER TABLE añade la columna
+        2. Backfill por batches desde data JSONB
+        3. Crea índice
+        """
+        promoted = self.get_promoted_fields()
+        if field in promoted:
+            logger.warning(f"El campo '{field}' ya está promovido")
+            return
+
+        logger.info(f"Promoviendo campo '{field}' en tipo '{type_id}'...")
+
+        with Session(self._engine) as session:
+            # 1. Añade la columna física
+            session.execute(text(f"ALTER TABLE events ADD COLUMN IF NOT EXISTS {field} TEXT"))
+            session.commit()
+            logger.info(f"Columna '{field}' añadida")
+
+            # 2. Backfill por batches desde JSONB
+            batch_size = 100
+            offset = 0
+            total_updated = 0
+
+            while True:
+                rows = session.execute(
+                    text("""
+                        SELECT id, data->:field AS val
+                        FROM events
+                        WHERE type_ = :type_id
+                        AND data ? :field
+                        LIMIT :limit OFFSET :offset
+                    """),
+                    {"field": field, "type_id": type_id, "limit": batch_size, "offset": offset}
+                ).fetchall()
+
+                if not rows:
+                    break
+
+                for row in rows:
+                    session.execute(
+                        text(f"UPDATE events SET {field} = :val WHERE id = :id"),
+                        {"val": row.val, "id": row.id}
+                    )
+
+                session.commit()
+                total_updated += len(rows)
+                offset += batch_size
+                logger.info(f"Backfill: {total_updated} filas actualizadas")
+
+            # 3. Crea índice
+            index_name = f"idx_events_{field}"
+            session.execute(text(f"CREATE INDEX IF NOT EXISTS {index_name} ON events ({field})"))
+            session.commit()
+            logger.info(f"Índice '{index_name}' creado")
+
+        logger.info(f"Promoción de '{field}' completada")

@@ -1,7 +1,0 @@
-id,type_,name,url,source,event_date,data
-1,race,10K Vigo,https://exemplo.gal/10k-vigo,csv_manual,2025-05-10,"{""location"": ""Vigo"", ""distance"": ""10K""}"
-2,race,Trail Cíes,https://exemplo.gal/trail-cies,csv_manual,2025-06-15,"{""location"": ""Vigo"", ""distance"": ""25K""}"
-3,race,Media Maratón Pontevedra,https://exemplo.gal/media-pontevedra,csv_manual,2025-07-20,"{""location"": ""Pontevedra"", ""distance"": ""21K""}"
-4,race,5K Baiona,https://exemplo.gal/5k-baiona,csv_manual,2025-08-03,"{""location"": ""Baiona"", ""distance"": ""5K""}"
-5,race,10K Santiago,https://ex.gal/10k,example,2025-03-10,"{""location"": ""Santiago""}"
-6,race,Trail Arousa,https://ex.gal/trail,example,2025-04-20,"{""location"": ""Arousa""}"

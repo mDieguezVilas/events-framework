@@ -15,5 +15,8 @@ notifications:
     enabled: true
     token_env: TELEGRAM_TOKEN
     chat_id_env: TELEGRAM_CHAT_ID
+  smtp:
+    enabled: true
+    summary: false
 
 sources_package: framework.sources

@@ -6,6 +6,8 @@ from framework.registry import Registry
 from framework.source_manager import SourceManager
 from framework.orchestrator import Orchestrator
 from framework.sources.base import EventSource, event_source, _REGISTRY
+from unittest.mock import MagicMock
+from framework.publication.base import NotificationAdapter
 
 
 @pytest.fixture(autouse=True)
@@ -73,3 +75,60 @@ def test_update_no_deduplica_cross_source(orchestrator):
     result = orchestrator.update()
     assert result["saved"] == 2
     assert result["skipped"] == 0
+
+def test_publication_manager_llama_a_adapters(orchestrator):
+    """Verifica que el PublicationManager llama a send() de cada adapter."""
+    mock_adapter = MagicMock(spec=NotificationAdapter)
+
+    from framework.publication.manager import PublicationManager
+    pub_manager = PublicationManager(adapters=[mock_adapter])
+
+    from framework.storage.csv_storage import CSVStorage
+    from framework.registry import Registry
+    import tempfile, os
+    tmp = tempfile.mkdtemp()
+
+    storage = CSVStorage(data_dir=tmp)
+    storage.init()
+    registry = Registry(path=os.path.join(tmp, "registry.json"))
+    registry.init()
+
+    from framework.source_manager import SourceManager
+    from framework.orchestrator import Orchestrator
+    source_manager = SourceManager()
+
+    orch = Orchestrator(storage, registry, source_manager, pub_manager)
+    make_source("notify_test", [
+        EventPayload(type_="race", name="Test Event", url="u", source="notify_test")
+    ])
+
+    orch.update()
+    mock_adapter.send.assert_called_once()
+
+
+def test_publication_manager_no_llama_si_no_hay_eventos(orchestrator):
+    """Si no hay eventos nuevos no se llaman los adapters."""
+    mock_adapter = MagicMock(spec=NotificationAdapter)
+
+    from framework.publication.manager import PublicationManager
+    pub_manager = PublicationManager(adapters=[mock_adapter])
+
+    from framework.storage.csv_storage import CSVStorage
+    from framework.registry import Registry
+    import tempfile, os
+    tmp = tempfile.mkdtemp()
+
+    storage = CSVStorage(data_dir=tmp)
+    storage.init()
+    registry = Registry(path=os.path.join(tmp, "registry.json"))
+    registry.init()
+
+    from framework.source_manager import SourceManager
+    from framework.orchestrator import Orchestrator
+    source_manager = SourceManager()
+
+    orch = Orchestrator(storage, registry, source_manager, pub_manager)
+    # No registramos ninguna fuente → no hay eventos
+    result = orch.update()
+    assert result["saved"] == 0
+    mock_adapter.send.assert_not_called()

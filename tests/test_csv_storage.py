@@ -100,3 +100,13 @@ def test_capabilities(storage):
     caps = storage.capabilities()
     assert "export" in caps
     assert "import" in caps
+
+def test_get_promoted_fields_devuelve_lista_vacia(storage):
+    result = storage.get_promoted_fields()
+    assert result == []
+
+
+def test_promote_field_no_hace_nada(storage):
+    """CSVStorage no soporta promoción, no debe lanzar excepción."""
+    storage.promote_field("race", "location")
+    assert storage.get_promoted_fields() == []

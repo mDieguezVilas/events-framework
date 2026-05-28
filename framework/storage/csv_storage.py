@@ -5,7 +5,9 @@ from pathlib import Path
 from typing import Any
 from framework.models import Event, EventPayload
 from framework.storage.base import StorageAdapter
+import logging
 
+logger = logging.getLogger(__name__)
 
 class CSVStorage(StorageAdapter):
 
@@ -101,3 +103,9 @@ class CSVStorage(StorageAdapter):
 
     def close(self) -> None:
         pass
+
+    def get_promoted_fields(self) -> list[str]:
+        return []
+
+    def promote_field(self, type_id: str, field: str) -> None:
+        logger.warning("CSVStorage no soporta promoción de campos")

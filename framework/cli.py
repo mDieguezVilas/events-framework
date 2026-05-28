@@ -5,6 +5,8 @@ from framework.api import app as fastapi_app, setup as api_setup
 from typing import Optional
 from dotenv import load_dotenv
 from framework.config import load_config, get_sources_package, get_storage_config, get_telegram_config
+from framework.publication.smtp import SMTPAdapter
+from framework.config import get_smtp_config
 from framework.registry import Registry
 from framework.storage.csv_storage import CSVStorage
 from framework.storage.sql_storage import SQLStorage
@@ -46,6 +48,19 @@ def _build_orchestrator(sources_package: Optional[str] = None) -> Orchestrator:
         pub_manager.add_adapter(TelegramAdapter(
             token=tg_cfg["token"],
             chat_id=tg_cfg["chat_id"],
+        ))
+
+    smtp_cfg = get_smtp_config(config)
+
+    if smtp_cfg:
+        pub_manager.add_adapter(SMTPAdapter(
+            host=smtp_cfg["host"],
+            port=smtp_cfg["port"],
+            user=smtp_cfg["user"],
+            password=smtp_cfg["password"],
+            from_addr=smtp_cfg["from_addr"],
+            to_addr=smtp_cfg["to_addr"],
+            summary=smtp_cfg["summary"],
         ))
     return Orchestrator(storage, registry, source_manager, pub_manager)
 
@@ -93,6 +108,38 @@ def serve_api(
     api_setup(storage, registry)
     typer.echo(f"Arrancando API en http://{host}:{port}")
     uvicorn.run(fastapi_app, host=host, port=port)
+
+@app.command(name="promote-field")
+def promote_field(
+    type_id: str = typer.Argument(..., help="Tipo de evento, ej: race"),
+    field: str = typer.Argument(..., help="Campo a promover, ej: location"),
+):
+    """Promueve un campo del JSONB a columna física con índice en Postgres."""
+    config = load_config()
+    storage_cfg = get_storage_config(config)
+    storage_type = storage_cfg.get("type", "csv")
+
+    if storage_type != "sql":
+        typer.echo("ERROR: promote-field solo está disponible con SQLStorage")
+        raise typer.Exit(1)
+
+    db_url = get_database_url(config)
+    if not db_url:
+        typer.echo("ERROR: DATABASE_URL no está definido en el .env")
+        raise typer.Exit(1)
+
+    # Confirmación antes de ALTER TABLE
+    typer.echo(f"Vas a promover el campo '{field}' del tipo '{type_id}' a columna física.")
+    typer.echo("Esto ejecutará ALTER TABLE en Postgres. No se puede deshacer automáticamente.")
+    confirmed = typer.confirm("¿Continuar?")
+    if not confirmed:
+        typer.echo("Operación cancelada")
+        raise typer.Exit(0)
+
+    storage = SQLStorage(database_url=db_url)
+    storage.init()
+    storage.promote_field(type_id, field)
+    typer.echo(f"Campo '{field}' promovido correctamente")
 
 def main():
     app()
