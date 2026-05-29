@@ -52,6 +52,7 @@ sources_package: sources
 
 Crea un ficheiro `.env` con las credenciales:
 
+```.env
 DATABASE_URL=postgresql+psycopg://postgres:password@localhost/mi_db
 TELEGRAM_TOKEN=
 TELEGRAM_CHAT_ID=
@@ -61,6 +62,7 @@ SMTP_USER=
 SMTP_PASS=
 SMTP_FROM=
 SMTP_TO=
+```
 
 ## Uso
 
