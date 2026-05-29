@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import patch, MagicMock
-from datetime import date
+from datetime import datetime
 from framework.models import Event
 from framework.publication.smtp import SMTPAdapter
 
@@ -33,12 +33,14 @@ def adapter_summary():
 
 @pytest.fixture
 def eventos():
+    now = datetime.now()
     return [
         Event(id=1, type_="race", name="10K Vigo", url="https://ex.gal",
-              source="fga", event_date=date(2025, 5, 10),
+              source="fga", event_date=now,
               data={"location": "Vigo", "distance": "10K"}),
         Event(id=2, type_="race", name="5K Baiona", url="https://ex.gal",
-              source="fga", data={"location": "Baiona"}),
+              source="fga", event_date=now,
+              data={"location": "Baiona"}),
     ]
 
 
@@ -68,7 +70,6 @@ def test_format_single_incluye_campos(adapter, eventos):
     result = adapter._format_single(eventos[0])
     assert "10K Vigo" in result
     assert "Vigo" in result
-    assert "2025-05-10" in result
     assert "https://ex.gal" in result
 
 

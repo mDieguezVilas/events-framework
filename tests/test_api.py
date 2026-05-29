@@ -1,7 +1,8 @@
 import pytest
+from datetime import datetime
 from fastapi.testclient import TestClient
 from framework.api import app, setup
-from framework.models import EventPayload
+from framework.models import EventPayload, Event
 from framework.storage.csv_storage import CSVStorage
 from framework.registry import Registry
 
@@ -24,10 +25,16 @@ def client_con_eventos(tmp_path):
     registry.init()
     setup(storage, registry)
 
-    storage.save_event(EventPayload(type_="race", name="10K Vigo", url="https://ex.gal", source="fga"))
-    storage.save_event(EventPayload(type_="race", name="5K Baiona", url="https://ex.gal", source="kronotime"))
-    storage.save_event(EventPayload(type_="conference", name="PyConES", url="https://ex.gal", source="manual"))
-
+    now = datetime.now()
+    storage.save_event(EventPayload(type_="race", name="10K Vigo",
+                                    url="https://ex.gal", source="fga",
+                                    event_date=now))
+    storage.save_event(EventPayload(type_="race", name="5K Baiona",
+                                    url="https://ex.gal", source="kronotime",
+                                    event_date=now))
+    storage.save_event(EventPayload(type_="conference", name="PyConES",
+                                    url="https://ex.gal", source="manual",
+                                    event_date=now))
     return TestClient(app)
 
 

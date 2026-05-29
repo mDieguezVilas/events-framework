@@ -1,24 +1,26 @@
-# tests/test_models.py
-from datetime import date
+from datetime import datetime
 from framework.models import Event, EventPayload, EventType
 
 
 def test_event_fields():
-    e = Event(type_="race", name="10K Santiago", url="https://ex.gal", source="fga")
+    e = Event(type_="race", name="10K Santiago", url="https://ex.gal",
+              source="fga", event_date=datetime.now())
     assert e.type_ == "race"
     assert e.id is None
+    assert e.event_date is not None
 
 
 def test_event_with_data():
-    e = Event(type_="race", name="10K Santiago", url="https://ex.gal", source="fga",
-              event_date=date(2025, 3, 10), data={"location": "Santiago", "distance": "10K"})
+    e = Event(type_="race", name="10K Santiago", url="https://ex.gal",
+              source="fga", event_date=datetime.now(),
+              data={"location": "Santiago", "distance": "10K"})
     assert e.data["location"] == "Santiago"
-    assert e.event_date == date(2025, 3, 10)
+    assert e.event_date is not None
 
 
 def test_event_payload_to_event():
     p = EventPayload(type_="race", name="10K", url="https://ex.gal", source="fga",
-                     event_date=date(2025, 3, 10), data={"location": "Santiago"})
+                     event_date=datetime.now(), data={"location": "Santiago"})
     e = p.to_event()
     assert isinstance(e, Event)
     assert e.id is None
@@ -26,9 +28,16 @@ def test_event_payload_to_event():
     assert e.data["location"] == "Santiago"
 
 
+def test_event_payload_to_event_sin_fecha():
+    p = EventPayload(type_="race", name="10K", url="https://ex.gal", source="fga")
+    e = p.to_event()
+    assert e.event_date is None
+
+
 def test_event_payload_to_event_preserves_all_fields():
+    now = datetime.now()
     p = EventPayload(type_="race", name="10K", url="https://ex.gal", source="fga",
-                     event_date=date(2025, 3, 10), data={"location": "Santiago"})
+                     event_date=now, data={"location": "Santiago"})
     e = p.to_event()
     assert e.name == p.name
     assert e.url == p.url

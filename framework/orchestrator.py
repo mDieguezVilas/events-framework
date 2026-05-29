@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from typing import Any, Optional
 from framework.models import EventPayload
 from framework.storage.base import StorageAdapter
@@ -27,7 +28,6 @@ class Orchestrator:
         self._sources_package = sources_package
 
     def update(self) -> dict[str, Any]:
-        """Ejecuta el ciclo completo: fetch → parse → validate → dedup → store → notify."""
         sources = self._source_manager.discover()
         if not sources:
             logger.warning("No se encontraron fuentes registradas")
@@ -39,45 +39,40 @@ class Orchestrator:
         saved = 0
         skipped = 0
         new_events = []
+        now = datetime.now()
 
         for source_id, payloads in all_payloads.items():
             for payload in payloads:
                 total += 1
 
-                # Validar contra JSON Schema si existe el EventType
                 if not self._validate(payload):
                     skipped += 1
                     continue
 
-                # Calcular fingerprint y comprobar duplicado
                 location = payload.data.get("location", "")
-                event_date = str(payload.event_date) if payload.event_date else ""
-                fp = compute_fingerprint(payload.name, payload.source, event_date, location)
+                fp = compute_fingerprint(payload.name, payload.source, "", location)
 
                 if self._storage.exists_fingerprint(fp):
                     logger.debug(f"Duplicado ignorado: {payload.name} ({source_id})")
                     skipped += 1
                     continue
 
-                # Guardar evento y fingerprint
+                payload = payload.model_copy(update={"event_date": now})
                 event = self._storage.save_event(payload)
                 self._storage.save_fingerprint(fp)
                 new_events.append(event)
                 saved += 1
                 logger.info(f"Guardado: {payload.name} ({source_id})")
 
-        # Publicar notificaciones si hay eventos nuevos
         if new_events and self._pub_manager:
             self._pub_manager.publish(new_events)
 
         return {"total": total, "saved": saved, "skipped": skipped}
 
     def _validate(self, payload: EventPayload) -> bool:
-        """Valida payload contra el JSON Schema del EventType si existe."""
         event_type = self._registry.get(payload.type_)
         if event_type is None or not event_type.json_schema:
             return True
-
         try:
             import jsonschema
             jsonschema.validate(instance=payload.data, schema=event_type.json_schema)

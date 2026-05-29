@@ -1,6 +1,6 @@
 from framework.models import EventPayload
 from framework.sources.base import EventSource, event_source
-from datetime import date
+from datetime import datetime
 
 
 @event_source(source_id="example", enabled=True)
@@ -20,7 +20,7 @@ class ExampleSource(EventSource):
                 name=item["name"],
                 url=item["url"],
                 source=self.source_id,
-                event_date=date.fromisoformat(item["date"]),
+                event_date=datetime.fromisoformat(item["date"]),
                 data={"location": item["location"]},
             ))
         return payloads

@@ -1,13 +1,14 @@
-from __future__ import annotations
 import csv
 import json
+import logging
+from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 from framework.models import Event, EventPayload
 from framework.storage.base import StorageAdapter
-import logging
 
 logger = logging.getLogger(__name__)
+
 
 class CSVStorage(StorageAdapter):
 
@@ -54,7 +55,7 @@ class CSVStorage(StorageAdapter):
     def bulk_save(self, payloads: list[EventPayload]) -> list[Event]:
         return [self.save_event(p) for p in payloads]
 
-    def query(self, filter_spec: dict[str, Any] | None = None) -> list[Event]:
+    def query(self, filter_spec: Optional[dict[str, Any]] = None) -> list[Event]:
         if not self._events_path.exists():
             return []
 
@@ -82,10 +83,6 @@ class CSVStorage(StorageAdapter):
                     match = False
                 elif key == "type_" and e.type_ != val:
                     match = False
-                elif key == "date_from" and (e.event_date is None or e.event_date < val):
-                    match = False
-                elif key == "date_to" and (e.event_date is None or e.event_date > val):
-                    match = False
             if match:
                 result.append(e)
         return result
@@ -98,14 +95,14 @@ class CSVStorage(StorageAdapter):
         with open(self._fp_path, "a", encoding="utf-8") as f:
             f.write(fingerprint + "\n")
 
-    def capabilities(self) -> set[str]:
-        return {"export", "import"}
-
-    def close(self) -> None:
-        pass
-
     def get_promoted_fields(self) -> list[str]:
         return []
 
     def promote_field(self, type_id: str, field: str) -> None:
         logger.warning("CSVStorage no soporta promoción de campos")
+
+    def capabilities(self) -> set[str]:
+        return {"export", "import"}
+
+    def close(self) -> None:
+        pass

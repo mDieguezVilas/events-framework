@@ -65,7 +65,7 @@ def test_parse_campos_correctos(source):
     assert p.name == "10K Vigo"
     assert p.source == "csv_manual"
     assert p.type_ == "race"
-    assert p.event_date == date(2025, 5, 10)
+    assert p.event_date.date() == date(2025, 5, 10)  # ← .date() para comparar solo la fecha
     assert p.data["location"] == "Vigo"
     assert p.data["distance"] == "10K"
 

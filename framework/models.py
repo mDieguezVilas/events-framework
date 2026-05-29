@@ -1,5 +1,5 @@
-from datetime import date
 from typing import Any, Optional
+from datetime import datetime
 from pydantic import BaseModel, Field
 
 
@@ -17,7 +17,7 @@ class Event(BaseModel):
     name: str
     url: str
     source: str
-    event_date: Optional[date] = None
+    event_date: Optional[datetime] = None
     data: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -26,7 +26,7 @@ class EventPayload(BaseModel):
     name: str
     url: str
     source: str
-    event_date: Optional[date] = None
+    event_date: Optional[datetime] = None
     data: dict[str, Any] = Field(default_factory=dict)
 
     def to_event(self) -> Event:

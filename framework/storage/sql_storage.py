@@ -1,9 +1,9 @@
 import json
 import logging
-from datetime import date
+from datetime import datetime
 from typing import Any, Optional
 
-from sqlalchemy import create_engine, text, Column, Integer, String, Date, Text
+from sqlalchemy import create_engine, text, Column, Integer, String, Date, Text, DateTime
 from sqlalchemy.orm import DeclarativeBase, Session
 from sqlalchemy.dialects.postgresql import JSONB
 
@@ -25,7 +25,7 @@ class EventRow(Base):
     name = Column(String, nullable=False)
     url = Column(String, nullable=False)
     source = Column(String, nullable=False)
-    event_date = Column(Date, nullable=True)
+    event_date = Column(DateTime, nullable=True)
     data = Column(JSONB, nullable=False, default=dict)
 
 

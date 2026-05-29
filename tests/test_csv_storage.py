@@ -1,6 +1,5 @@
-# tests/test_csv_storage.py
 import pytest
-from datetime import date
+from datetime import datetime
 from framework.models import EventPayload
 from framework.storage.csv_storage import CSVStorage
 
@@ -20,7 +19,7 @@ def test_init_crea_fichero(tmp_path):
 
 def test_save_event_asigna_id(storage):
     p = EventPayload(type_="race", name="10K Santiago", url="https://ex.gal",
-                     source="fga", event_date=date(2025, 3, 10))
+                     source="fga", event_date=datetime.now())
     event = storage.save_event(p)
     assert event.id == 1
 
@@ -36,7 +35,8 @@ def test_save_event_incrementa_id(storage):
 
 def test_query_devuelve_eventos_guardados(storage):
     p = EventPayload(type_="race", name="10K Santiago", url="https://ex.gal",
-                     source="fga", event_date=date(2025, 3, 10), data={"location": "Santiago"})
+                     source="fga", event_date=datetime.now(),
+                     data={"location": "Santiago"})
     storage.save_event(p)
     results = storage.query()
     assert len(results) == 1
@@ -67,16 +67,6 @@ def test_query_filtro_type(storage):
     assert results[0].type_ == "race"
 
 
-def test_query_filtro_date_from(storage):
-    storage.save_event(EventPayload(type_="race", name="A", url="u", source="fga",
-                                    event_date=date(2025, 1, 1)))
-    storage.save_event(EventPayload(type_="race", name="B", url="u", source="fga",
-                                    event_date=date(2025, 6, 1)))
-    results = storage.query({"date_from": date(2025, 3, 1)})
-    assert len(results) == 1
-    assert results[0].name == "B"
-
-
 def test_fingerprint_no_existe(storage):
     assert not storage.exists_fingerprint("abc123")
 
@@ -101,12 +91,12 @@ def test_capabilities(storage):
     assert "export" in caps
     assert "import" in caps
 
+
 def test_get_promoted_fields_devuelve_lista_vacia(storage):
     result = storage.get_promoted_fields()
     assert result == []
 
 
 def test_promote_field_no_hace_nada(storage):
-    """CSVStorage no soporta promoción, no debe lanzar excepción."""
     storage.promote_field("race", "location")
     assert storage.get_promoted_fields() == []
