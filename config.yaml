@@ -12,11 +12,11 @@ sources:
 
 notifications:
   telegram:
-    enabled: true
+    enabled: false
     token_env: TELEGRAM_TOKEN
     chat_id_env: TELEGRAM_CHAT_ID
   smtp:
-    enabled: true
+    enabled: false
     summary: false
 
 sources_package: framework.sources

@@ -10,17 +10,17 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Events Framework API", version="0.1.0")
 
-# Storage y Registry se inyectan al arrancar desde el CLI
+
 _storage: Optional[StorageAdapter] = None
 _registry: Optional[Registry] = None
+_known_sources: Optional[set[str]] = None
 
 
-def setup(storage: StorageAdapter, registry: Registry) -> None:
-    """Inyecta el storage y registry en la API. Se llama desde el CLI."""
-    global _storage, _registry
+def setup(storage: StorageAdapter, registry: Registry, known_sources: Optional[set[str]] = None) -> None:
+    global _storage, _registry, _known_sources
     _storage = storage
     _registry = registry
-
+    _known_sources = known_sources
 
 @app.get("/events/", response_model=list[Event])
 def list_events(
@@ -33,6 +33,9 @@ def list_events(
 ):
     if _storage is None:
         raise HTTPException(status_code=503, detail="Storage no inicializado")
+
+    if source and _known_sources is not None and source not in _known_sources:
+        raise HTTPException(status_code=404, detail=f"Fonte '{source}' non existe")
 
     filter_spec = {}
     if source:

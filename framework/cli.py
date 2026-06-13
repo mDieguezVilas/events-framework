@@ -92,6 +92,7 @@ def serve_api(
     config = load_config()
     storage_cfg = get_storage_config(config)
     storage_type = storage_cfg.get("type", "csv")
+    pkg = get_sources_package(config)
 
     if storage_type == "sql":
         db_url = get_database_url(config)
@@ -105,7 +106,9 @@ def serve_api(
     storage.init()
     registry = Registry()
     registry.init()
-    api_setup(storage, registry)
+    source_manager = SourceManager(sources_package=pkg or None)
+    known_sources = set(source_manager.discover().keys())
+    api_setup(storage, registry, known_sources)
     typer.echo(f"Arrancando API en http://{host}:{port}")
     uvicorn.run(fastapi_app, host=host, port=port)
 
